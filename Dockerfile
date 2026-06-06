@@ -4,11 +4,15 @@ FROM golang:1.21-alpine AS builder
 WORKDIR /app
 
 COPY backend/go.mod ./
-# go.sum is generated inside the container â€” no need to commit it
+
+# Generate go.sum and download deps in one step
+RUN go mod tidy || true
 RUN go mod download
 
 COPY backend/ ./
 
+# Tidy again after all source is present, then build
+RUN go mod tidy
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o server .
 
 # â”€â”€ Stage 2: Runtime â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
